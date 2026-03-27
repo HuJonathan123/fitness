@@ -1,6 +1,68 @@
-function buildCalendar() {
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>週期減脂健身日曆</title>
+    <style>
+        :root {
+            --menstrual: #ff7675; --follicular: #55efc4; 
+            --ovulation: #fdcb6e; --luteal: #74b9ff; --rest: #dfe6e9;
+        }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; color: #2d3436; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .controls { text-align: center; margin-bottom: 25px; padding: 20px; border-bottom: 2px solid #eee; }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #ddd; margin: 10px 0; }
+        button { background: #e84393; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 10px; 
+            margin-top: 20px;
+        }
+        .weekday-header { text-align: center; font-weight: bold; padding: 10px; background: #eee; border-radius: 5px; }
+        
+        .day-cell { 
+            min-height: 120px; border: 1px solid #eee; border-radius: 8px; padding: 8px;
+            display: flex; flex-direction: column; transition: transform 0.2s; background: white;
+        }
+        .date-num { font-size: 0.8em; color: #636e72; margin-bottom: 5px; font-weight: bold; }
+        .phase-tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; color: white; width: fit-content; margin-bottom: 5px; }
+        .workout-text { font-size: 0.85em; font-weight: 600; line-height: 1.3; }
+        
+        .bg-menstrual { background-color: var(--menstrual); }
+        .bg-follicular { background-color: var(--follicular); }
+        .bg-ovulation { background-color: var(--ovulation); }
+        .bg-luteal { background-color: var(--luteal); }
+        .bg-rest { background-color: #b2bec3; }
+        .is-rest-day { background-color: #f9f9f9; border-style: dashed; }
+        
+        @media (max-width: 768px) {
+            .calendar-grid { grid-template-columns: repeat(2, 1fr); }
+            .weekday-header { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <h2>🔥 週期減脂健身日曆</h2>
+        <p>週三、五休息 | 週末訓練 | 無氧+有氧結合</p>
+        <label>選擇姨媽第一天：</label>
+        <input type="date" id="cycleStart">
+        <button onclick="buildCalendar()">生成減脂計劃</button>
+    </div>
+
+    <div class="calendar-grid" id="calendar">
+        </div>
+</div>
+
+<script>
+    function buildCalendar() {
         const startInput = document.getElementById('cycleStart').value;
-        if (!startInput) return alert("請選擇日期");
+        if (!startInput) return alert("請先選擇日期喔！");
 
         const startDate = new Date(startInput);
         const container = document.getElementById('calendar');
@@ -19,12 +81,7 @@ function buildCalendar() {
             container.appendChild(document.createElement('div'));
         }
 
-        // 減脂版訓練池
-        const weightWorkouts = [
-            "🔥 Push Day + 15min 有氧 (減脂)",
-            "🔥 Pull Day + 15min 有氧 (減脂)",
-            "🔥 Leg Day + 15min 有氧 (減脂)"
-        ];
+        const weightWorkouts = ["🔥 Push + 15m有氧", "🔥 Pull + 15m有氧", "🔥 Leg + 15m有氧"];
         let weightIdx = 0;
         let lastWasWeight = false;
 
@@ -34,46 +91,40 @@ function buildCalendar() {
             const dayOfWeek = current.getDay();
             const dateStr = `${current.getMonth()+1}/${current.getDate()} (${weekDays[dayOfWeek]})`;
             
-            let phase = "";
-            let bgColor = "";
-            let workout = "";
+            let phase = "", bgColor = "", workout = "";
 
             if (i <= 5) { phase = "行經期"; bgColor = "bg-menstrual"; }
             else if (i <= 12) { phase = "濾泡期"; bgColor = "bg-follicular"; }
             else if (i <= 15) { phase = "排卵期"; bgColor = "bg-ovulation"; }
             else { phase = "黃體期"; bgColor = "bg-luteal"; }
 
-            // 判斷訓練內容 (週三、五固定休息)
             if (dayOfWeek === 3 || dayOfWeek === 5) {
                 workout = "😴 休息日 (Recovery)";
                 bgColor = "bg-rest";
                 lastWasWeight = false;
             } else if (i <= 2) {
-                workout = "🧘 完全休息 / 輕度拉伸";
+                workout = "🧘 完全休息 / 伸展";
                 bgColor = "bg-rest";
                 lastWasWeight = false;
             } else {
                 if (phase === "濾泡期" || phase === "排卵期") {
-                    // 減脂期：無氧與高強度有氧交替
                     if (!lastWasWeight) {
                         workout = weightWorkouts[weightIdx % 3];
                         weightIdx++;
                         lastWasWeight = true;
                     } else {
-                        workout = "🏃 30-40min 快走/慢跑 (減脂專項)";
+                        workout = "🏃 35min 快走/慢跑";
                         lastWasWeight = false;
                     }
                 } else if (phase === "黃體期") {
-                    // 黃體期：代謝高但易倦，增加低強度長有氧
                     if (!lastWasWeight) {
-                        workout = "💪 輕量循環訓練 (全身)";
+                        workout = "💪 輕量循環訓練";
                         lastWasWeight = true;
                     } else {
-                        workout = "🚶 45min LISS 穩態有氧";
+                        workout = "🚶 45min 穩態有氧";
                         lastWasWeight = false;
                     }
                 } else {
-                    // 行經期後半段
                     workout = "🧘 瑜珈/快走 20min";
                     lastWasWeight = false;
                 }
@@ -89,3 +140,7 @@ function buildCalendar() {
             container.appendChild(cell);
         }
     }
+</script>
+
+</body>
+</html>
