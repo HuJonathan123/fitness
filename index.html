@@ -1,0 +1,91 @@
+function buildCalendar() {
+        const startInput = document.getElementById('cycleStart').value;
+        if (!startInput) return alert("請選擇日期");
+
+        const startDate = new Date(startInput);
+        const container = document.getElementById('calendar');
+        container.innerHTML = '';
+
+        const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        weekDays.forEach(day => {
+            const div = document.createElement('div');
+            div.className = 'weekday-header';
+            div.innerText = day;
+            container.appendChild(div);
+        });
+
+        const firstDayOfWeek = startDate.getDay();
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            container.appendChild(document.createElement('div'));
+        }
+
+        // 減脂版訓練池
+        const weightWorkouts = [
+            "🔥 Push Day + 15min 有氧 (減脂)",
+            "🔥 Pull Day + 15min 有氧 (減脂)",
+            "🔥 Leg Day + 15min 有氧 (減脂)"
+        ];
+        let weightIdx = 0;
+        let lastWasWeight = false;
+
+        for (let i = 1; i <= 28; i++) {
+            const current = new Date(startDate);
+            current.setDate(startDate.getDate() + (i - 1));
+            const dayOfWeek = current.getDay();
+            const dateStr = `${current.getMonth()+1}/${current.getDate()} (${weekDays[dayOfWeek]})`;
+            
+            let phase = "";
+            let bgColor = "";
+            let workout = "";
+
+            if (i <= 5) { phase = "行經期"; bgColor = "bg-menstrual"; }
+            else if (i <= 12) { phase = "濾泡期"; bgColor = "bg-follicular"; }
+            else if (i <= 15) { phase = "排卵期"; bgColor = "bg-ovulation"; }
+            else { phase = "黃體期"; bgColor = "bg-luteal"; }
+
+            // 判斷訓練內容 (週三、五固定休息)
+            if (dayOfWeek === 3 || dayOfWeek === 5) {
+                workout = "😴 休息日 (Recovery)";
+                bgColor = "bg-rest";
+                lastWasWeight = false;
+            } else if (i <= 2) {
+                workout = "🧘 完全休息 / 輕度拉伸";
+                bgColor = "bg-rest";
+                lastWasWeight = false;
+            } else {
+                if (phase === "濾泡期" || phase === "排卵期") {
+                    // 減脂期：無氧與高強度有氧交替
+                    if (!lastWasWeight) {
+                        workout = weightWorkouts[weightIdx % 3];
+                        weightIdx++;
+                        lastWasWeight = true;
+                    } else {
+                        workout = "🏃 30-40min 快走/慢跑 (減脂專項)";
+                        lastWasWeight = false;
+                    }
+                } else if (phase === "黃體期") {
+                    // 黃體期：代謝高但易倦，增加低強度長有氧
+                    if (!lastWasWeight) {
+                        workout = "💪 輕量循環訓練 (全身)";
+                        lastWasWeight = true;
+                    } else {
+                        workout = "🚶 45min LISS 穩態有氧";
+                        lastWasWeight = false;
+                    }
+                } else {
+                    // 行經期後半段
+                    workout = "🧘 瑜珈/快走 20min";
+                    lastWasWeight = false;
+                }
+            }
+
+            const cell = document.createElement('div');
+            cell.className = `day-cell ${workout.includes("休息") ? 'is-rest-day' : ''}`;
+            cell.innerHTML = `
+                <div class="date-num">${dateStr}</div>
+                <div class="phase-tag ${bgColor}">${phase} (D${i})</div>
+                <div class="workout-text">${workout}</div>
+            `;
+            container.appendChild(cell);
+        }
+    }
